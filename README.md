@@ -20,10 +20,10 @@ Image Timestamper gives users a significant amount of flexibility to edit the ti
 
 ## How it works
 
-1. You create a series of timelapse photos
+1. You create a series of timelapse photos or video file
 2. You define how timestamps should be assigned
-3. The script reads all of the photos in the directory
-4. The script writes new timestamps into photos
+3. The script reads all of the photos in the directory or video file
+4. The script writes new timestamps into photos as `DateTimeOriginal` values or into video as `*CreateDate`'s.
 
 ## Requirements
 
@@ -42,14 +42,14 @@ TODO
 ## Quick start guide
 
 ```
-python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT DIRECTORY] [OUTPUT DIRECTORY]
+python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
 ```
 
 * mode
 	- manual (must specify start datetime AND interval e.g. start time 2020-01-09:11:00:47:003 and interval 5 second)
 	- offset (specify time in seconds that should be applied to existing `DateTimeOriginal` values)
-	- inherit (inherit originaldatetime from gpsdatetime)
-	- reverse (inherit gpsdatetime from originaldatetime)
+	- inherit (inherit originaldatetime from gpsdatetime, in the case of video this is the first gpsdatetime value reported)
+	- reverse (inherit gpsdatetime from `originaldatetime` (photo) or `MediaCreateDate` for videos)
 
 ## Support 
 
