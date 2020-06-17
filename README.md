@@ -33,7 +33,7 @@ Works on Windows, Linux and MacOS.
 
 ### Software Requirements
 
-Exiftool
+* Python version 3.6+
 
 ### Image requirements
 
@@ -57,4 +57,4 @@ We offer community support for all our software on our Campfire forum. [Ask a qu
 
 ## License
 
-Image Timestamper is licensed under a [GNU AGPLv3 License](https://github.com/trek-view/image-timestamper/blob/master/LICENSE.txt).
+Image Timestamper is licensed under a [GNU AGPLv3 License](https://github.com/trek-view/image-video-timestamper/blob/master/LICENSE.txt).
