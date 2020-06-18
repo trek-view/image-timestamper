@@ -47,9 +47,19 @@ python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT 
 
 * mode
 	- manual (must specify start datetime AND interval e.g. start time 2020-01-09:11:00:47:003 and interval 5 second)
-	- offset (specify time in seconds that should be applied to existing `DateTimeOriginal` values)
-	- inherit (inherit originaldatetime from gpsdatetime, in the case of video this is the first gpsdatetime value reported)
-	- reverse (inherit gpsdatetime from `originaldatetime` (photo) or `MediaCreateDate` for videos)
+	- offset (specify time in seconds that should be applied to existing `DateTimeOriginal` or all `*CreateDate` values)
+	- inherit (inherit originaldatetime or all `*CreateDate` from gpsdatetime, in the case of video this is the first gpsdatetime value reported)
+	- reverse (inherit gpsdatetime from `originaldatetime` (photo) or `CreateDate` for videos)
+
+## Output
+
+**Video files**
+
+The video outputted to the output folder will contain all original metadata, but with updated timestamps from script for all `CreateDate` values
+
+**Photo files**
+
+The photo file(s) outputted will contain all original metadata, but with updated timestamps from script for `DateTimeOriginal` values.
 
 ## Support 
 
