@@ -34,22 +34,38 @@ Works on Windows, Linux and MacOS.
 ### Software Requirements
 
 * Python version 3.6+
+* [Pandas](https://pandas.pydata.org/docs/): python -m pip install pandas
 
 ### Image requirements
 
-TODO
+Requirements are different by the mode.
+
+* mode
+    - manual doesn't require any thing
+    - offset the `DateTimeOriginal` must required
+    - inherit the `GPSDateTime` must required
+    - reverse the `DateTimeOriginal` must required
 
 ## Quick start guide
 
 ```
-python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
+python image-timestamper.py -m [MODE] --start_time [START_TIME] --interval [INTERVAL] --offset [OFFSET] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
 ```
 
 * mode
-	- manual (must specify start datetime AND interval e.g. start time 2020-01-09:11:00:47:003 and interval 5 second)
+	- manual (must specify start datetime AND interval e.g. start time 2020-01-09:11:00:47:+0300 and interval 5 second)
 	- offset (specify time in seconds that should be applied to existing `DateTimeOriginal` or all `*CreateDate` values)
 	- inherit (inherit originaldatetime or all `*CreateDate` from gpsdatetime, in the case of video this is the first gpsdatetime value reported)
 	- reverse (inherit gpsdatetime from `originaldatetime` (photo) or `CreateDate` for videos)
+	
+* start_time
+    - Require when mode is manual. e.g (2020-01-09:11:00:47:+0300)
+    
+* interval
+    - Interval times by set value.
+
+* offset
+    - Offset from current set value.
 
 ## Output
 
