@@ -18,6 +18,8 @@ Finally, other software can sometimes completely strip metadata from files (e.g 
 
 Image Timestamper gives users a significant amount of flexibility to edit the timestamps of multiple images (usually timestamps) in one go.
 
+Note: if you need to adjust GPS timestamps see [GPS Track Timestamper](https://github.com/trek-view/gps-track-timestamper).
+
 ## How it works
 
 1. You create a series of timelapse photos or video file
@@ -46,18 +48,12 @@ python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT 
 ```
 
 * mode
-	- manual (must specify start `originaldatetime` (photo), `*CreateDate` for videos or, first photo `originaldatetime` and time offset for subsequent photos (timelapse). For timelapse images will be ordered and processed in ascending time order if  `originaldatetime` values exist, if no `originaldatetime` values exist script will order and process using ascending filename order.
-	- offset (specify time in seconds that should be applied to existing `DateTimeOriginal` (photo / timelapse) or all `*CreateDate` (video) values
-	- inherit (inherit `originaldatetime` (photo / timelapse) or all `*CreateDate` (video) from `gpsdatetime`. In the case of video this is the first `gpsdatetime` value reported)
-	- reverse (inherit `gpsdatetime` from `originaldatetime` (photo / timelapse). Does not work with video)
+	- manual: must specify start `originaldatetime` (photo) or first photo `originaldatetime` and time offset for subsequent photos (timelapse). For timelapse images will be ordered and processed in ascending time order if  `originaldatetime` values exist in all images, if no `originaldatetime` values exist the script will order and process using ascending filename order.
+	- offset: must specify time in seconds that should be applied to existing `DateTimeOriginal` (photo / timelapse) values
+	- inherit: inherits `originaldatetime` (photo / timelapse)  from `gpsdatetime`.
+	- reverse: inherits `gpsdatetime` from `originaldatetime` (photo / timelapse).
 	
 ## Output
-
-**Video files**
-
-The video outputted to the output folder will contain all original metadata, but with updated timestamps from script for all `*CreateDate` values
-
-**Photo files**
 
 The photo file(s) outputted will contain all original metadata, but with updated timestamps from script for `DateTimeOriginal` values.
 
