@@ -8,35 +8,23 @@
 import os
 import argparse
 import sys
-import math
 from pathlib import Path
-from xml.etree import ElementTree
-import xml.sax
-import csv
 import datetime
-import ntpath
-import time
+import shutil
 
 import pandas as pd
-import gpxpy
 from exiftool_custom import exiftool
 
 
-def get_files(path, isdir):
+def get_files(path):
     """
     Return a list of files, or directories.
     """
     list_of_files = []
 
-    for item in os.listdir(path):
-        item_path = os.path.abspath(os.path.join(path, item))
-
-        if isdir:
-            if os.path.isdir(item_path):
-                list_of_files.append(item_path)
-        else:
-            if os.path.isfile(item_path):
-                list_of_files.append(item_path)
+    for p, r, files in os.walk(path):
+        for file in files:
+            list_of_files.append(os.path.join(p, file))
 
     return list_of_files
 
@@ -59,15 +47,8 @@ def parse_metadata(dfrow, keys):
     dict_metadata = dfrow['METADATA']
     values = []
     for key in keys:
-        try:
-            data = dict_metadata[key]
-            values.append(data)
-        except KeyError:
-            print('\n\nAn image was encountered that did not have the required metadata.')
-            print('Image: {0}'.format(dfrow['IMAGE_NAME']))
-            print('Missing metadata key: {0}\n\n'.format(key.split(':')[-1]))
-            input('Press any key to quit')
-            quit()
+        data = dict_metadata[key]
+        values.append(data)
     return values
 
 
@@ -75,15 +56,37 @@ def update_metadata_manual(df_images, start_time, interval):
     """
     Update Images OriginalDateTime or CreateDate from state_time and interval
     """
-    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d:%H:%M:%S:%z")
-    i = 0
+    sort_key = 'ORIGINAL_DATETIME'
 
-    df_images[['ORIGINAL_DATETIME', 'CREATE_DATE']] = df_images.apply(
-            lambda x: [start_time, start_time], axis=1, result_type='expand')
+    try:
+        keys = ['EXIF:DateTimeOriginal']
+        df_images['ORIGINAL_DATETIME'] = df_images.apply(
+            lambda x: parse_metadata(x, keys), axis=1, result_type='expand')
+    except:
+        print('Can not sort the files by DateTimeOriginal. Now sorting by file name')
+        sort_key = 'IMAGE_NAME'
 
-    for i in range(len(df_images)):
-        df_images.iat[i, df_images.columns.get_loc('ORIGINAL_DATETIME')] += datetime.timedelta(0, i * interval)
-        df_images.iat[i, df_images.columns.get_loc('CREATE_DATE')] += datetime.timedelta(0, i * interval)
+    df_images.sort_values(sort_key, axis=0, ascending=True, inplace=True)
+
+    if start_time:
+        start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d:%H:%M:%S")
+    else:
+        for idx, row in df_images.iterrows():
+            try:
+                start_time = datetime.datetime.strptime(row['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S") \
+                             - datetime.timedelta(0, idx * interval)
+                print('Start time is not set, so now setting by {}th file({})\'s DateTimeOriginal'.format(
+                    idx, row['IMAGE_NAME']))
+                break
+            except:
+                continue
+
+    if not start_time:
+        print("""Start time can not be set by DateTimeOriginal of files. Now setting by current time.""")
+        start_time = now
+
+    df_images['ORIGINAL_DATETIME'] = df_images.apply(
+            lambda x: start_time + datetime.timedelta(0, int(x.name) * interval), axis=1, result_type='expand')
 
     return df_images
 
@@ -92,14 +95,16 @@ def update_metadata_offset(df_images, offset):
     """
     Update Images OriginalDateTime or CreateDate add offset from existing value
     """
-    keys = ['EXIF:DateTimeOriginal', 'EXIF:CreateDate']
-    df_images[['ORIGINAL_DATETIME', 'CREATE_DATE']] = df_images.apply(
-        lambda x: parse_metadata(x, keys), axis=1, result_type='expand')
 
-    df_images['ORIGINAL_DATETIME'] = df_images.\
-        apply(lambda x: datetime.datetime.strptime(x['ORIGINAL_DATETIME'] + datetime.timedelta(0, offset)), axis=1)
-    df_images['CREATE_DATE'] = df_images. \
-        apply(lambda x: datetime.datetime.strptime(x['CREATE_DATE'] + datetime.timedelta(0, offset)), axis=1)
+    try:
+        df_images['ORIGINAL_DATETIME'] = df_images.apply(
+            lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S") \
+                + datetime.timedelta(0, offset),
+            axis=1,
+            result_type='expand')
+    except:
+        input("""OriginalDateTime of some files are not set.\n\nPress any key to quit...""")
+        quit()
 
     return df_images
 
@@ -108,9 +113,13 @@ def update_metadata_inherit(df_images):
     """
     Update Images OriginalDateTime or CreateDate from GPS DateTime
     """
-    keys = ['Composite:GPSDateTime', 'Composite:GPSDateTime']
-    df_images[['ORIGINAL_DATETIME', 'CREATE_DATE']] = df_images.apply(
-        lambda x: parse_metadata(x, keys), axis=1, result_type='expand')
+
+    try:
+        df_images['ORIGINAL_DATETIME'] = df_images.apply(
+            lambda x: datetime.datetime.strptime(x['METADATA']['Composite:GPSDateTime'], "%Y:%m:%d %H:%M:%SZ"), axis=1, result_type='expand')
+    except:
+        input("""GPSDateTime of some files are not set.\n\nPress any key to quit...""")
+        quit()
 
     return df_images
 
@@ -119,49 +128,32 @@ def update_metadata_reverse(df_images):
     """
     Update Images GPS DateTime from OriginalDateTime or CreateDate
     """
-    keys = ['EXIF:DateTimeOriginal']
-    df_images[['GPS_DATETIME']] = df_images.apply(
-        lambda x: parse_metadata(x, keys), axis=1, result_type='expand')
+    df_images['GPS_DATETIME'] = df_images.apply(
+        lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S"), axis=1, result_type='expand')
 
     return df_images
 
 
-def clean_up_new_files(output_photo_directory, list_of_files):
-    """
-    As Exiftool creates a copy of the original image when processing,
-    the new files are copied to the output directory,
-    original files are renamed to original filename.
-    """
+def copy_files(input_path, output_path):
+    print('Moving files to destination: {}'.format(output_path))
+    if os.path.isdir(os.path.abspath(output_path)):
+        shutil.rmtree(output_path)
 
-    print('Cleaning up old and new files...')
-    if not os.path.isdir(os.path.abspath(output_photo_directory)):
-        os.mkdir(os.path.abspath(output_photo_directory))
-
-    for image in list_of_files:
-        image_head, image_name = ntpath.split(image)
-        try:
-            os.rename(image, os.path.join(os.path.abspath(output_photo_directory),
-                                          '{0}_calculated.{1}'.format(image_name.split('.')[0], image.split('.')[-1])))
-            os.rename(os.path.join(os.path.abspath(image_head), '{0}_original'.format(image_name)), image)
-        except PermissionError:
-            print("Image {0} is still in use by Exiftool's process or being moved'."
-                  " Waiting before moving it...".format(image_name))
-            time.sleep(3)
-            os.rename(image, os.path.join(os.path.abspath(output_photo_directory),
-                                          '{0}_calculated.{1}'.format(image_name.split('.')[0], image.split('.')[-1])))
-            os.rename(os.path.join(os.path.abspath(image_head), '{0}_original'.format(image_name)), image)
-
-    print('Output files saved to {0}'.format(os.path.abspath(output_photo_directory)))
+    try:
+        shutil.copytree(input_path, output_path)
+        # Directories are the same
+    except shutil.Error as e:
+        print('Directory not copied. Error: %s' % e)
+        # Any error saying that the directory doesn't exist
+    except OSError as e:
+        print('Directory not copied. Error: %s' % e)
 
 
 def image_time_stamper(args):
     path = Path(__file__)
     input_photo_directory = os.path.abspath(args.input_path)
     output_photo_directory = os.path.abspath(args.output_directory)
-    mode = args.mode
-    start_time = args.start_time
-    interval = int(args.interval)
-    offset = int(args.offset)
+    mode = args.mode.lower()
 
     is_win_shell = True
 
@@ -196,8 +188,15 @@ def image_time_stamper(args):
     else:
         exiftool.executable = args.executable_path
 
+    # Validate input mode
+    if mode not in ['manual', 'offset', 'inherit', 'reverse']:
+        input("""Mode should be one of "manual", "offset", "inherit", "reverse".\n\nPress any key to quit...""")
+        quit()
+
+    copy_files(input_photo_directory, output_photo_directory)
+
     # Get files in directory
-    list_of_files = get_files(input_photo_directory, False)
+    list_of_files = get_files(output_photo_directory)
     print('{0} file(s) have been found in input directory'.format(len(list_of_files)))
 
     # Get metadata of each file in list_of_images
@@ -209,29 +208,27 @@ def image_time_stamper(args):
     df_images = pd.DataFrame(list_of_metadata)
 
     if mode == 'manual':
+        start_time = args.start_time
+        interval = int(args.interval)
         df_images = update_metadata_manual(df_images, start_time, interval)
 
-    if mode == 'offset':
+    elif mode == 'offset':
+        offset = int(args.offset)
         df_images = update_metadata_offset(df_images, offset)
 
-    if mode == 'inherit':
+    elif mode == 'inherit':
         df_images = update_metadata_inherit(df_images)
 
-    if mode == 'reverse':
+    else:
         df_images = update_metadata_reverse(df_images)
 
     # For each image, write the DateTimeOriginal into EXIF
     print('Writing metadata to EXIF of qualified images...\n')
-    if mode is not 'reverse':
+    if mode != 'reverse':
         with exiftool.ExifTool(win_shell=is_win_shell) as et:
             for row in df_images.iterrows():
                 et.execute(
                     bytes('-DateTimeOriginal={0}'.format(row[1]['ORIGINAL_DATETIME'].strftime("%Y:%m:%d %H:%M:%S")),
-                          'utf-8'),
-                    bytes("{0}".format(row[1]['IMAGE_NAME']), 'utf-8'))
-
-                et.execute(
-                    bytes('-CreateDate={0}'.format(row[1]['CREATE_DATE  '].strftime("%Y:%m:%d")),
                           'utf-8'),
                     bytes("{0}".format(row[1]['IMAGE_NAME']), 'utf-8'))
 
@@ -246,8 +243,6 @@ def image_time_stamper(args):
                     bytes('-GPSDateStamp={0}'.format(row[1]['GPS_DATETIME'].strftime("%Y:%m:%d")),
                           'utf-8'),
                     bytes("{0}".format(row[1]['IMAGE_NAME']), 'utf-8'))
-
-    clean_up_new_files(output_photo_directory, [image for image in df_images['IMAGE_NAME'].values])
 
     input('\nMetadata successfully added to images.\n\nPress any key to quit')
     quit()
@@ -266,7 +261,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--start_time',
                         action='store',
-                        default=now.strftime("%Y-%m-%d, %H:%M:%S"),
+                        default=None,
                         dest='start_time',
                         help='Image TimeStamper StartTime. When mode is "manual" this argument is required.')
 
@@ -300,6 +295,6 @@ if __name__ == '__main__':
                         action='version',
                         version='%(prog)s 1.0')
 
-    args = parser.parse_args()
+    input_args = parser.parse_args()
 
-    image_time_stamper(args)
+    image_time_stamper(input_args)
