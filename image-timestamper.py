@@ -244,9 +244,9 @@ def image_time_stamper(args):
         with exiftool.ExifTool(win_shell=is_win_shell) as et:
             for row in df_images.iterrows():
                 et.execute(
-                    bytes('-GPSTimeStamp={} -GPSDateStamp={}'.format(
-                        row[1]['GPS_DATETIME'].strftime("%H:%M:%S"), row[1]['GPS_DATETIME'].strftime("%Y:%m:%d")),
-                          'utf-8'),
+                    bytes('-GPSTimeStamp={}'.format(
+                        row[1]['GPS_DATETIME'].strftime("%H:%M:%S")), 'utf-8'),
+                    bytes('-GPSDateStamp={}'.format(row[1]['GPS_DATETIME'].strftime("%Y:%m:%d")), 'utf-8'),
                     bytes("{}".format(row[1]['IMAGE_NAME']), 'utf-8'))
 
     clean_up_new_files(output_photo_directory, [image for image in df_images['IMAGE_NAME'].values])
