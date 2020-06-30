@@ -54,12 +54,6 @@ python image-timestamper.py -m [MODE] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DI
 	- `offset`: requires `DateTimeOriginal` (**timelapse / photo**) OR `CreateDate` (**video**) value. Must specify time `--offset` in seconds that should be applied to existing `DateTimeOriginal` (timelapse / photo) or `*CreateDate` values
     - `inherit`: requires `GPSDateTime` value (**video / timelapse / photo**). Inherits `DateTimeOriginal` (photo / timelapse) or `*CreateDate` values (video) from `GPSDateTime`. For video files, the first reported `GPSDateTime` is used.
 	- `reverse`: requires `DateTimeOriginal` (**timelapse / photo**). Inherits `GPSDateTime` from `DateTimeOriginal`. Note, this does not work with video where multiple `GPSDateTime` are required. WARNING: `GPSDateTime` is a much more accurate value for time, as this is reported from GPS atomic clocks. It is very unlikely you want to use this mode, unless your intention is to spoof the image time.
-  
-**Note for Windows users**
-
-It is recommended you place `exiftool.exe` in the script directory. To do this, [download exiftool](https://exiftool.org/), extract the `.zip` file, and place `exiftool(-k).exe` in script directory.
-
-If you want to run an existing exiftool install from outside the directory you can also add the path to the exiftool executable on the machine using either `--exiftool-exec-path` or `-e`.
 	
 ## Output
 
@@ -67,71 +61,78 @@ The photo file(s) outputted in specified directory will contain all original met
 
 ## Quick start 
 
-**Note for MacOS / Unix user**
+
+_Note for Windows users_
+
+It is recommended you place `exiftool.exe` in the script directory. To do this, [download exiftool](https://exiftool.org/), extract the `.zip` file, and place `exiftool(-k).exe` in script directory.
+
+If you want to run an existing exiftool install from outside the directory you can also add the path to the exiftool executable on the machine using either `--exiftool-exec-path` or `-e`.
+
+_Note for MacOS / Unix users_
 
 Remove the double quotes (`"`) around any directory path shown in the examples. For example `"OUTPUT_1"` becomes `OUTPUT_1`.
 
-### Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and tag the image with `DateTimeOriginal` = `2020-01-01:00:00:01` then output (to directory `OUTPUT_1`)
+**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and tag the image with `DateTimeOriginal` = `2020-01-01:00:00:01` then output (to directory `OUTPUT_1`)**
 
 ```
 python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_1"
 ```
 
-### Take a directory of images (`INPUT`) and tag the first image with `DateTimeOriginal` = `2020-01-01:00:00:01` with each subsequent photo in order having a time offset by 10 seconds for `DateTimeOriginal` value then output (to directory `OUTPUT_1`)
+**Take a directory of images (`INPUT`) and tag the first image with `DateTimeOriginal` = `2020-01-01:00:00:01` with each subsequent photo in order having a time offset by 10 seconds for `DateTimeOriginal` value then output (to directory `OUTPUT_1`)**
 
 ```
 python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 --interval 10 "INPUT" "OUTPUT_1"
 ```
 
-### Take a video file (`INPUT/VIDEO_7152.mp4`) and and tag the image with all `*CreateDate`s = `2020-01-01:00:00:01` then output (to directory `OUTPUT_1`)
+**Take a video file (`INPUT/VIDEO_7152.mp4`) and and tag the image with all `*CreateDate`s = `2020-01-01:00:00:01` then output (to directory `OUTPUT_1`)**
 
 ```
 python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 "INPUT/VIDEO_7152.mp4" "OUTPUT_1"
 ```
 
-### Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and add 5 minutes onto `DateTimeOriginal` value then output (to directory `OUTPUT_2`)
+**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and add 5 minutes onto `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
 
 ```
 python image-timestamper.py -m offset --offset 300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
 ```
 
-### Take a directory of images (`INPUT`) and and add 5 minutes onto all images `DateTimeOriginal` value then output (to directory `OUTPUT_2`) 
+**Take a directory of images (`INPUT`) and and add 5 minutes onto all images `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
 
 ```
 python image-timestamper.py -m offset --offset 300 "INPUT" "OUTPUT_2"
 ```
 
-### Take a video file (`INPUT/VIDEO_7152.mp4`) and add 5 minutes onto all `*CreateDate`s values then output (to directory `OUTPUT_2`)
+**Take a video file (`INPUT/VIDEO_7152.mp4`) and add 5 minutes onto all `*CreateDate`s values then output (to directory `OUTPUT_2`)**
 
 ```
 python image-timestamper.py -m offset --offset 300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
 ```
 
-### Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and inherit the `DateTimeOriginal` value from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`) 
+**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and inherit the `DateTimeOriginal` value from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`)**
 
 ```
 python image-timestamper.py -m inherit "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_3"
 ```
 
-### Take a directory of images (`INPUT`) and inherit all `DateTimeOriginal` values from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`) 
+**Take a directory of images (`INPUT`) and inherit all `DateTimeOriginal` values from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`)**
 
 ```
 python image-timestamper.py -m inherit "INPUT" "OUTPUT_3"
 ```
 
-### Take a video file (`INPUT/VIDEO_7152.mp4`) and inherit all `*CreateDate` values from the first reported `GPSDateTime` in the telemetry track then output (to directory `OUTPUT_3`)
+**Take a video file (`INPUT/VIDEO_7152.mp4`) and inherit all `*CreateDate` values from the first reported `GPSDateTime` in the telemetry track then output (to directory `OUTPUT_3`)**
 
 ```
 python image-timestamper.py -m inherit "INPUT/VIDEO_7152.mp4" "OUTPUT_3"
 ```
 
-### Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and the image `GPSDateTime` match the value reported for its `DateTimeOriginal` then output (to directory `OUTPUT_4`)
+**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and the image `GPSDateTime` match the value reported for its `DateTimeOriginal` then output (to directory `OUTPUT_4`)**
 
 ```
 python image-timestamper.py -m reverse "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_4"
 ```
 
-### Take a directory of images (`INPUT`) and make each images `GPSDateTime` match the value reported for its `DateTimeOriginal` then output (to directory `OUTPUT_4`)
+**Take a directory of images (`INPUT`) and make each images `GPSDateTime` match the value reported for its `DateTimeOriginal` then output (to directory `OUTPUT_4`)**
 
 ```
 python image-timestamper.py -m reverse "INPUT" "OUTPUT_4"
@@ -143,4 +144,4 @@ We offer community support for all our software on our Campfire forum. [Ask a qu
 
 ## License
 
-Image Timestamper is licensed under a [GNU AGPLv3 License](LICENSE.txt).
+Image Timestamper is licensed under a [GNU AGPLv3 License](/LICENSE.txt).
