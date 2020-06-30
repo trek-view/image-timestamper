@@ -115,13 +115,22 @@ def update_metadata_manual(df_images, start_time, interval):
     return df_images
 
 
+def get_time_metadata_by_key(row, key, offset=0, time_format="%Y:%m:%d %H:%M:%S"):
+    """
+    Get meta time data as datetime type.
+    """
+    try:
+        return datetime.datetime.strptime(row['METADATA'][key], time_format) + datetime.timedelta(0, offset)
+    except:
+        return None
+
+
 def update_metadata_offset(df_images, offset):
     """
     Update Images OriginalDateTime or CreateDate add offset from existing value
     """
     df_images['ORIGINAL_DATETIME'] = df_images.apply(
-        lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S") \
-            + datetime.timedelta(0, offset) if x['METADATA'].get('EXIF:DateTimeOriginal') else None,
+        lambda x: get_time_metadata_by_key(x, 'EXIF:DateTimeOriginal', offset),
         axis=1,
         result_type='expand')
 
@@ -136,8 +145,7 @@ def update_metadata_inherit(df_images):
     """
 
     df_images['ORIGINAL_DATETIME'] = df_images.apply(
-        lambda x: datetime.datetime.strptime(x['METADATA']['Composite:GPSDateTime'], "%Y:%m:%d %H:%M:%SZ") if x[
-            'METADATA'].get('Composite:GPSDateTime') else None, axis=1,
+        lambda x: get_time_metadata_by_key(x, 'Composite:GPSDateTime', time_format="%Y:%m:%d %H:%M:%SZ"), axis=1,
         result_type='expand')
 
     df_images = df_images.query('ORIGINAL_DATETIME.notnull()', engine='python')
@@ -151,8 +159,7 @@ def update_metadata_reverse(df_images):
     """
 
     df_images['GPS_DATETIME'] = df_images.apply(
-        lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S") if x[
-            "METADATA"].get('EXIF:DateTimeOriginal') else None,
+        lambda x: get_time_metadata_by_key(x, 'EXIF:DateTimeOriginal'),
         axis=1, result_type='expand')
 
     df_images = df_images.query('GPS_DATETIME.notnull()', engine='python')
