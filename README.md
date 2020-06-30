@@ -43,15 +43,6 @@ Works on Windows, Linux and MacOS.
 * [Pandas](https://pandas.pydata.org/docs/): python -m pip install pandas
 * [Exiftool](https://exiftool.org/)
 
-### Image / video metadata requirements
-
-Requirements are different by the mode.
-
-* manual: 
-* offset:
-* inherit: 
-* reverse: 
-
 ## Usage
 
 ```
