@@ -110,4 +110,4 @@ We offer community support for all our software on our Campfire forum. [Ask a qu
 
 ## License
 
-Image Timestamper is licensed under a [GNU AGPLv3 License](https://github.com/trek-view/image-video-timestamper/blob/master/LICENSE.txt).
+Image Timestamper is licensed under a [GNU AGPLv3 License](LICENSE.txt).
