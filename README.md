@@ -36,22 +36,42 @@ Works on Windows, Linux and MacOS.
 ### Software Requirements
 
 * Python version 3.6+
+* [Pandas](https://pandas.pydata.org/docs/): python -m pip install pandas
 
 ### Image requirements
 
-TODO
+Requirements are different by the mode.
+
+* mode
+    - manual doesn't require any thing
+    - offset the `DateTimeOriginal` must required
+    - inherit the `GPSDateTime` must required
+    - reverse the `DateTimeOriginal` must required
 
 ## Quick start guide
 
 ```
-python image-timestamper.py -m [MODE] [OPTIONAL START TIME AND INTERVAL] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
+python image-timestamper.py -m [MODE] --start_time [START_TIME] --interval [INTERVAL] --offset [OFFSET] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
 ```
 
 * mode
+
 	- manual: must specify start `originaldatetime` (photo) or first photo `originaldatetime` and time offset for subsequent photos (timelapse). For timelapse images will be ordered and processed in ascending time order if  `originaldatetime` values exist in all images, if no `originaldatetime` values exist the script will order and process using ascending filename order.
 	- offset: must specify time in seconds that should be applied to existing `DateTimeOriginal` (photo / timelapse) values
 	- inherit: inherits `originaldatetime` (photo / timelapse)  from `gpsdatetime`.
 	- reverse: inherits `gpsdatetime` from `originaldatetime` (photo / timelapse).
+  
+* --start_time
+    - Require when mode is manual. e.g (2020-01-09:11:00:47:+0300)
+    
+* --interval
+    - Interval times by set value.
+
+* --offset
+    - Offset from current set value.
+    
+* --exiftool-exec-path, -e
+    - Optional: path to Exiftool executable in Windows.
 	
 ## Output
 
