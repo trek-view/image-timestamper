@@ -135,12 +135,12 @@ def update_metadata_inherit(df_images):
     Update Images OriginalDateTime or CreateDate from GPS DateTime
     """
 
-    try:
-        df_images['ORIGINAL_DATETIME'] = df_images.apply(
-            lambda x: datetime.datetime.strptime(x['METADATA']['Composite:GPSDateTime'], "%Y:%m:%d %H:%M:%SZ"), axis=1, result_type='expand')
-    except:
-        input("""GPSDateTime of some files are not set.\n\nPress any key to quit...""")
-        quit()
+    df_images['ORIGINAL_DATETIME'] = df_images.apply(
+        lambda x: datetime.datetime.strptime(x['METADATA']['Composite:GPSDateTime'], "%Y:%m:%d %H:%M:%SZ") if x[
+            'METADATA'].get('Composite:GPSDateTime') else None, axis=1,
+        result_type='expand')
+
+    df_images = df_images.query('ORIGINAL_DATETIME.notnull()', engine='python')
 
     return df_images
 
@@ -149,8 +149,13 @@ def update_metadata_reverse(df_images):
     """
     Update Images GPS DateTime from OriginalDateTime or CreateDate
     """
+
     df_images['GPS_DATETIME'] = df_images.apply(
-        lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S"), axis=1, result_type='expand')
+        lambda x: datetime.datetime.strptime(x['METADATA']['EXIF:DateTimeOriginal'], "%Y:%m:%d %H:%M:%S") if x[
+            "METADATA"].get('EXIF:DateTimeOriginal') else None,
+        axis=1, result_type='expand')
+
+    df_images = df_images.query('GPS_DATETIME.notnull()', engine='python')
 
     return df_images
 
@@ -231,7 +236,8 @@ def image_time_stamper(args):
         df_images = update_metadata_reverse(df_images)
 
     # For each image, write the DateTimeOriginal into EXIF
-    print('Writing metadata to EXIF of qualified images...\n')
+    print('Writing metadata to EXIF of {} qualified images...\n'.format(len(df_images.index)))
+
     if mode != 'reverse':
         with exiftool.ExifTool(win_shell=is_win_shell) as et:
             for row in df_images.iterrows():
