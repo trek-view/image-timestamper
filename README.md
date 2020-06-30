@@ -51,7 +51,7 @@ python image-timestamper.py -m [MODE] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DI
 
 * mode (`-m`)
 	- `manual`: doesn't require any existing data (**video / timelapse / photo**). For single photo and video you must specify start `DateTimeOriginal` using `--start_time` in `YYYY-MM-DD:HH:MM:SS` format. For timestamp must supply `--start_time` and the time offset for subsequent photos using `--interval` in seconds. Timelapse images in the directory specified will be ordered and processed in ascending time order (1-9) if  `DateTimeOriginal` values exist in all images, if no `DateTimeOriginal` values exist (for all images) the script will order and process using ascending filename order (A-Z).
-	- `offset`: requires `DateTimeOriginal` (**timelapse / photo**) OR `CreateDate` (**video**) value. Must specify time `--offset` in seconds that should be applied to existing `DateTimeOriginal` (timelapse / photo) or `*CreateDate` values
+	- `offset`: requires `DateTimeOriginal` (**timelapse / photo**) OR `CreateDate` (**video**) value. Must specify time `--offset` in seconds that should be applied to existing `DateTimeOriginal` (timelapse / photo) or `*CreateDate` values. Can be positive or negative.
     - `inherit`: requires `GPSDateTime` value (**video / timelapse / photo**). Inherits `DateTimeOriginal` (photo / timelapse) or `*CreateDate` values (video) from `GPSDateTime`. For video files, the first reported `GPSDateTime` is used.
 	- `reverse`: requires `DateTimeOriginal` (**timelapse / photo**). Inherits `GPSDateTime` from `DateTimeOriginal`. Note, this does not work with video where multiple `GPSDateTime` are required. WARNING: `GPSDateTime` is a much more accurate value for time, as this is reported from GPS atomic clocks. It is very unlikely you want to use this mode, unless your intention is to spoof the image time.
 	
@@ -90,22 +90,22 @@ python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 --interva
 python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 "INPUT/VIDEO_7152.mp4" "OUTPUT_1"
 ```
 
-**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and add 5 minutes onto `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
+**Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and subtract 5 minutes onto `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
 
 ```
-python image-timestamper.py -m offset --offset 300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
+python image-timestamper.py -m offset --offset -300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
 ```
 
-**Take a directory of images (`INPUT`) and and add 5 minutes onto all images `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
+**Take a directory of images (`INPUT`) and and subtract 5 minutes onto all images `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
 
 ```
-python image-timestamper.py -m offset --offset 300 "INPUT" "OUTPUT_2"
+python image-timestamper.py -m offset --offset -300 "INPUT" "OUTPUT_2"
 ```
 
-**Take a video file (`INPUT/VIDEO_7152.mp4`) and add 5 minutes onto all `*CreateDate`s values then output (to directory `OUTPUT_2`)**
+**Take a video file (`INPUT/VIDEO_7152.mp4`) and subtract 5 minutes onto all `*CreateDate`s values then output (to directory `OUTPUT_2`)**
 
 ```
-python image-timestamper.py -m offset --offset 300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
+python image-timestamper.py -m offset --offset -300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
 ```
 
 **Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and inherit the `DateTimeOriginal` value from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`)**
