@@ -61,10 +61,9 @@ The photo file(s) outputted in specified directory will contain all original met
 
 ## Quick start 
 
-
 _Note for Windows users_
 
-It is recommended you place `exiftool.exe` in the script directory. To do this, [download exiftool](https://exiftool.org/), extract the `.zip` file, and place `exiftool(-k).exe` in script directory.
+It is recommended you place `exiftool.exe` in the script directory. To do this, [download exiftool](https://exiftool.org/), extract the `.zip` file, place `exiftool(-k).exe` in script directory, and rename `exiftool(-k).exe` as `exiftool.exe`
 
 If you want to run an existing exiftool install from outside the directory you can also add the path to the exiftool executable on the machine using either `--exiftool-exec-path` or `-e`.
 
