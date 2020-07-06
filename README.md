@@ -2,7 +2,7 @@
 
 ## In one sentence
 
-Command line Python script that 1) takes a photo, series of images (timelapse) or video, 2) reads existing time data (if any), and 3) writes new time data based on offset values defined by user.
+Command line Python script that 1) takes a photo or series of images (timelapse), 2) reads existing time data (if any), and 3) writes new time data based on offset values defined by user.
 
 ## Why we built this
 
@@ -20,16 +20,14 @@ Finally, other software can sometimes completely strip metadata from files (e.g 
 
 Image Timestamper gives users a significant amount of flexibility to edit the timestamps of multiple images (usually timestamps) in one go using the command line.
 
-The script works with .mp4 video files too. In the case of video files all `*CreateDate`'s (e.g. MediaCreateDate, TrackCreateDate, etc,) are modified instead (as oppose to `DateTimeOriginal` for image files)
-
 _Note: if you need to adjust GPS log timestamps see [GPS Track Timestamper](https://github.com/trek-view/gps-track-timestamper)._
 
 ## How it works
 
-1. You specify a photo file, series of timelapse photo files, or video file
+1. You specify a photo file or series of timelapse photo files
 2. You define how timestamps should be assigned
-3. The script reads all of the photos in the directory or video file
-4. The script writes new timestamps into photos as `DateTimeOriginal` values or into video as `*CreateDate`'s.
+3. The script reads the photo / all of the photos in the directory
+4. The script writes new timestamps into photos as `DateTimeOriginal` values.
 
 ## Requirements
 
@@ -46,18 +44,18 @@ Works on Windows, Linux and MacOS.
 ## Usage
 
 ```
-python image-timestamper.py -m [MODE] [INPUT DIRECTORY OR VIDEO FILE] [OUTPUT DIRECTORY]
+python image-timestamper.py -m [MODE] [INPUT DIRECTORY PHOTO FILE] [OUTPUT DIRECTORY]
 ```
 
 * mode (`-m`)
-	- `manual`: doesn't require any existing data (**video / timelapse / photo**). For single photo and video you must specify start `DateTimeOriginal` using `--start_time` in `YYYY-MM-DD:HH:MM:SS` format. For timestamp must supply `--start_time` and the time offset for subsequent photos using `--interval` in seconds. Timelapse images in the directory specified will be ordered and processed in ascending time order (1-9) if  `DateTimeOriginal` values exist in all images, if no `DateTimeOriginal` values exist (for all images) the script will order and process using ascending filename order (A-Z).
-	- `offset`: requires `DateTimeOriginal` (**timelapse / photo**) OR `CreateDate` (**video**) value. Must specify time `--offset` in seconds that should be applied to existing `DateTimeOriginal` (timelapse / photo) or `*CreateDate` values. Can be positive or negative.
-    - `inherit`: requires `GPSDateTime` value (**video / timelapse / photo**). Inherits `DateTimeOriginal` (photo / timelapse) or `*CreateDate` values (video) from `GPSDateTime`. For video files, the first reported `GPSDateTime` is used.
-	- `reverse`: requires `DateTimeOriginal` (**timelapse / photo**). Inherits `GPSDateTime` from `DateTimeOriginal`. Note, this does not work with video where multiple `GPSDateTime` are required. WARNING: `GPSDateTime` is a much more accurate value for time, as this is reported from GPS atomic clocks. It is very unlikely you want to use this mode, unless your intention is to spoof the image time.
+	- `manual`: doesn't require any existing data (**timelapse / photo**). For single photo you must specify start `DateTimeOriginal` using `--start_time` in `YYYY-MM-DD:HH:MM:SS` format. For timestamp must supply `--start_time` and the time offset for subsequent photos using `--interval` in seconds. Timelapse images in the directory specified will be ordered and processed in ascending time order (1-9) if  `DateTimeOriginal` values exist in all images, if no `DateTimeOriginal` values exist (for all images) the script will order and process using ascending filename order (A-Z).
+	- `offset`: requires `DateTimeOriginal` (**timelapse / photo**). Must specify time `--offset` in seconds that should be applied to existing `DateTimeOriginal` (timelapse / photo) values. Can be positive or negative.
+    - `inherit`: requires `GPSDateTime` value (**timelapse / photo**). Inherits `DateTimeOriginal` (photo / timelapse) from `GPSDateTime`.
+	- `reverse`: requires `DateTimeOriginal` (**timelapse / photo**). Inherits `GPSDateTime` from `DateTimeOriginal`. **WARNING:** `GPSDateTime` is a much more accurate value for time, as this is reported from GPS atomic clocks. It is very unlikely you want to use this mode, unless your intention is to spoof the image time.
 	
 ## Output
 
-The photo file(s) outputted in specified directory will contain all original metadata, but with updated timestamps from script for `DateTimeOriginal` or `*CreateDate` values.
+The photo file(s) outputted in specified directory will contain all original metadata, but with updated timestamps from script for `DateTimeOriginal` values.
 
 ## Quick start 
 
@@ -83,12 +81,6 @@ python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 "INPUT/MU
 python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 --interval 10 "INPUT" "OUTPUT_1"
 ```
 
-**Take a video file (`INPUT/VIDEO_7152.mp4`) and and tag the image with all `*CreateDate`s = `2020-01-01:00:00:01` then output (to directory `OUTPUT_1`)**
-
-```
-python image-timestamper.py -m manual --start_time 2020-01-01:00:00:01 "INPUT/VIDEO_7152.mp4" "OUTPUT_1"
-```
-
 **Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and subtract 5 minutes onto `DateTimeOriginal` value then output (to directory `OUTPUT_2`)**
 
 ```
@@ -101,12 +93,6 @@ python image-timestamper.py -m offset --offset -300 "INPUT/MULTISHOT_0611_000000
 python image-timestamper.py -m offset --offset -300 "INPUT" "OUTPUT_2"
 ```
 
-**Take a video file (`INPUT/VIDEO_7152.mp4`) and subtract 5 minutes onto all `*CreateDate`s values then output (to directory `OUTPUT_2`)**
-
-```
-python image-timestamper.py -m offset --offset -300 "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT_2"
-```
-
 **Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and inherit the `DateTimeOriginal` value from the images reported `GPSDateTime` then output (to directory `OUTPUT_3`)**
 
 ```
@@ -117,12 +103,6 @@ python image-timestamper.py -m inherit "INPUT/MULTISHOT_0611_000000.jpg" "OUTPUT
 
 ```
 python image-timestamper.py -m inherit "INPUT" "OUTPUT_3"
-```
-
-**Take a video file (`INPUT/VIDEO_7152.mp4`) and inherit all `*CreateDate` values from the first reported `GPSDateTime` in the telemetry track then output (to directory `OUTPUT_3`)**
-
-```
-python image-timestamper.py -m inherit "INPUT/VIDEO_7152.mp4" "OUTPUT_3"
 ```
 
 **Take a single photo (`INPUT/MULTISHOT_0611_000000.jpg`) and the image `GPSDateTime` match the value reported for its `DateTimeOriginal` then output (to directory `OUTPUT_4`)**
